@@ -1,0 +1,18 @@
+.anon-wallet-home { max-width: 46rem; margin: auto; padding: calc(var(--spacing) * 6) calc(var(--spacing) * 5) calc(var(--spacing) * 12); }
+.anon-wallet-balance { display: flex; flex-direction: column; align-items: center; gap: calc(var(--spacing) * 3); padding-block: calc(var(--spacing) * 10); text-align: center; }
+.anon-wallet-balance-label { display: flex; align-items: center; gap: calc(var(--spacing) * 2); color: var(--app-text-secondary); font-size: var(--text-body); font-weight: 700; text-transform: uppercase; }
+.anon-wallet-balance-label button { display: grid; place-items: center; min-width: calc(var(--spacing) * 11); min-height: calc(var(--spacing) * 11); }
+.anon-wallet-amount { font-size: clamp(2.7rem, 9vw, 4.5rem); line-height: 1.1; letter-spacing: -.06em; overflow-wrap: anywhere; max-width: 100%; }
+.anon-wallet-transfers { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--spacing) * 3); }
+.anon-wallet-transfers a { display: flex; width: 100%; min-height: calc(var(--spacing) * 16); align-items: center; justify-content: center; gap: calc(var(--spacing) * 3); border: 1px solid var(--app-accent); border-radius: var(--radius-chip); background: var(--app-accent); color: var(--app-on-action); font-size: var(--text-title-md); font-weight: 700; text-transform: uppercase; }
+.anon-wallet-transfers a + a { background: var(--app-surface); color: var(--app-accent); border-color: var(--app-border); }
+.anon-wallet-assets { margin-block: calc(var(--spacing) * 8); }
+.anon-wallet-assets h2 { margin-bottom: calc(var(--spacing) * 3); font-size: var(--text-title); font-weight: 700; text-transform: uppercase; }
+.anon-wallet-asset-list { overflow: hidden; border: 1px solid var(--app-border); border-radius: var(--radius-card); background: var(--app-surface); }
+.anon-wallet-asset-list > * + * { border-top: 1px solid var(--app-divider); }
+.anon-wallet-load-more { display: block; margin: calc(var(--spacing) * 4) auto 0; padding: calc(var(--spacing) * 3) calc(var(--spacing) * 5); border-radius: var(--radius-chip); background: var(--app-surface-soft); }
+.anon-wallet-shortcuts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(var(--spacing) * 2); margin-top: calc(var(--spacing) * 5); }
+.anon-wallet-shortcuts a { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-width: 0; gap: calc(var(--spacing) * 2); padding: calc(var(--spacing) * 3) var(--spacing); border: 1px solid var(--app-border); border-radius: var(--radius-chip); background: var(--app-surface); font-size: var(--text-label); font-weight: 700; text-align: center; overflow-wrap: anywhere; }
+.anon-wallet-shortcut-icon { display: grid; place-items: center; flex: none; width: calc(var(--spacing) * 12); height: calc(var(--spacing) * 12); border-radius: var(--radius-chip); background: var(--app-accent-soft); color: var(--app-accent); }
+.anon-wallet-shortcuts a > span:nth-child(2) { flex: 1; min-width: 0; }
+.anon-wallet-home :is(a, button):focus-visible { outline: 2px solid var(--app-accent); outline-offset: var(--spacing); }

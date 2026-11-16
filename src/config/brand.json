@@ -1,0 +1,21 @@
+{
+  "name": "LIVA",
+  "icons": {
+    "favicon": "/icons/hyperapp.svg",
+    "appleTouch": "/icons/hyperapp-192.png",
+    "pwa192": "/icons/hyperapp-192.png",
+    "pwa512": "/icons/hyperapp-512.png"
+  },
+  "supportEmail": "support@example.com",
+  "telegramSupportUrl": "",
+  "telegramChannelUrl": "",
+  "style": "anon",
+  "accent": "#f56536",
+  "colors": {
+    "background": "#f0ede8",
+    "surface": "#eae7e2",
+    "surfaceSoft": "#e4e0d9",
+    "text": "#24231f",
+    "muted": "#77736c"
+  }
+}
