@@ -7,6 +7,7 @@ import { ApkIcon } from "@/components/shared/ApkIcon";
 import { TeamPage } from "@/features/referrals/TeamPage";
 import { CopyTradePage } from "@/features/copy/CopyTradePage";
 import { WalletCoinPreview } from "../components/WalletCoinPreview";
+import "./apple-wallet.css";
 
 export function AppleWalletHome({ model }: { model: WalletHomeModel }) {
   const t = useT();

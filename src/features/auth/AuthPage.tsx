@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useT, useI18n } from "@/i18n/I18nProvider";
 import { useAuth } from "@/state/AuthContext";
 import { AuthLayout } from "./AuthLayout";
+import { OnboardingShell, onboardingScenes } from "./OnboardingShell";
 import { WelcomeStep } from "./steps/WelcomeStep";
 import { EmailStep } from "./steps/EmailStep";
 import { LoginPasswordStep } from "./steps/LoginPasswordStep";
@@ -59,6 +60,7 @@ export function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [resendLoading, setResendLoading] = useState(false);
+  const [sceneIndex, setSceneIndex] = useState(0);
 
   const goto = (next: Step) => {
     setError(undefined);
@@ -181,13 +183,24 @@ export function AuthPage() {
     }
   };
 
+  const isWelcome = step.kind === "welcome";
+  const scene = onboardingScenes[sceneIndex] ?? onboardingScenes[0];
+
+  let panel: ReactNode;
   switch (step.kind) {
     case "welcome":
-      return <WelcomeStep onContinue={() => goto({ kind: "email" })} />;
+      panel = (
+        <WelcomeStep
+          active={sceneIndex}
+          onActiveChange={setSceneIndex}
+          onContinue={() => goto({ kind: "email" })}
+        />
+      );
+      break;
 
     case "email":
-      return (
-        <AuthLayout onBack={() => goto({ kind: "welcome" })}>
+      panel = (
+        <AuthLayout onBack={() => goto({ kind: "welcome" })} title={t("auth.welcomeTitle")} subtitle={t("auth.welcomeSubtitle")}>
           <EmailStep
             onResolved={(email, nextStep) =>
               goto({
@@ -199,9 +212,10 @@ export function AuthPage() {
           />
         </AuthLayout>
       );
+      break;
 
     case "loginPassword":
-      return (
+      panel = (
         <AuthLayout onBack={() => goto({ kind: "email" })} title={t("auth.loginTitle")} subtitle={step.email}>
           <LoginPasswordStep
             loading={loading}
@@ -211,18 +225,20 @@ export function AuthPage() {
           />
         </AuthLayout>
       );
+      break;
 
     case "registerName":
-      return (
+      panel = (
         <AuthLayout onBack={() => goto({ kind: "email" })} title={t("auth.registerTitle")}>
           <RegisterNameStep
             onSubmit={(firstName, lastName) => goto({ kind: "registerPassword", email: step.email, firstName, lastName })}
           />
         </AuthLayout>
       );
+      break;
 
     case "registerPassword":
-      return (
+      panel = (
         <AuthLayout
           onBack={() => goto({ kind: "registerName", email: step.email })}
           title={t("auth.registerTitle")}
@@ -231,9 +247,10 @@ export function AuthPage() {
           <RegisterPasswordStep loading={loading} error={error} onSubmit={handleRegisterPassword} />
         </AuthLayout>
       );
+      break;
 
     case "verifyEmail":
-      return (
+      panel = (
         <AuthLayout onBack={() => goto({ kind: "email" })} title={t("auth.verifyEmailTitle")} subtitle={t("auth.verifyEmailSubtitle", { email: step.email })}>
           <CodeStep
             initialCode={initialVerificationCode}
@@ -246,12 +263,14 @@ export function AuthPage() {
           />
         </AuthLayout>
       );
+      break;
 
     case "registrationChoice":
-      return <AuthLayout><RegistrationChoice onWeb={() => goto({ kind: "loginPassword", email: step.email })} /></AuthLayout>;
+      panel = <AuthLayout><RegistrationChoice onWeb={() => goto({ kind: "loginPassword", email: step.email })} /></AuthLayout>;
+      break;
 
     case "loginChallenge":
-      return (
+      panel = (
         <AuthLayout
           onBack={() => goto({ kind: "loginPassword", email: step.email })}
           title={t("auth.challengeTitle")}
@@ -260,9 +279,10 @@ export function AuthPage() {
           <CodeStep loading={loading} error={error} onSubmit={handleLoginChallenge} />
         </AuthLayout>
       );
+      break;
 
     case "forgotRequest":
-      return (
+      panel = (
         <AuthLayout
           onBack={() => goto({ kind: "loginPassword", email: step.email })}
           title={t("auth.forgotTitle")}
@@ -271,12 +291,24 @@ export function AuthPage() {
           <ForgotPasswordRequestStep initialEmail={step.email} loading={loading} error={error} onSubmit={handleForgotRequest} />
         </AuthLayout>
       );
+      break;
 
     case "forgotConfirm":
-      return (
+      panel = (
         <AuthLayout onBack={() => goto({ kind: "forgotRequest", email: step.email })} title={t("auth.forgotTitle")}>
           <ForgotPasswordConfirmStep loading={loading} error={error} onSubmit={handleForgotConfirm} />
         </AuthLayout>
       );
+      break;
   }
+
+  return (
+    <OnboardingShell
+      scene={scene}
+      mode={isWelcome ? "welcome" : "auth"}
+      panelKey={step.kind}
+    >
+      {panel}
+    </OnboardingShell>
+  );
 }

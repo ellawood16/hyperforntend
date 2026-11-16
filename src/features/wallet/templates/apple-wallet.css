@@ -1,0 +1,268 @@
+/* Apple home — plain, screen-merged composition (HIG plain list).
+   Interactive controls keep affordance; content sections are not cards. */
+
+.apple-home {
+  --apple-scene: var(--onboarding-primary);
+  --apple-scene-soft: color-mix(in srgb, var(--apple-scene) 9%, transparent);
+  --apple-rule: color-mix(in srgb, var(--app-text-primary) 10%, transparent);
+  position: relative;
+  isolation: isolate;
+  max-width: 40rem;
+  margin: auto;
+  padding: 0 1.25rem 3.5rem;
+  color: var(--app-text-primary);
+}
+
+.apple-home::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(ellipse at 82% 16%, var(--apple-scene-soft), transparent 62%);
+  pointer-events: none;
+}
+
+.apple-home-balance {
+  padding: 1.25rem 0 1.75rem;
+}
+
+.apple-balance-line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.apple-balance-line p {
+  font-size: clamp(2.75rem, 11vw, 4.75rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -.07em;
+  overflow-wrap: anywhere;
+}
+
+.apple-balance-line button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  margin-top: .35rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--apple-scene);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.apple-home-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+  margin-top: 1.5rem;
+}
+
+.apple-home-actions a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-width: 0;
+  min-height: 3.25rem;
+  padding: .7rem .85rem;
+  border: 0;
+  border-radius: .85rem;
+  background: var(--apple-scene);
+  color: var(--color-pure-white);
+  font-size: .95rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  box-shadow: none;
+  transition: opacity .15s ease;
+}
+
+.apple-home-actions a:hover { opacity: .9; }
+
+.apple-home-actions a:nth-child(2) {
+  background: color-mix(in srgb, var(--apple-scene) 12%, transparent);
+  color: var(--apple-scene);
+}
+
+.apple-home-actions a span {
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+/* Assets: plain list flush to the screen — no card shell. */
+.apple-home .wallet-coin-preview {
+  margin: .25rem 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.apple-home .wallet-coin-preview::before {
+  content: attr(aria-label);
+  display: block;
+  margin-bottom: .35rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid var(--apple-rule);
+  color: var(--app-text-secondary);
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.apple-home .wallet-coin-row {
+  min-height: 3.5rem;
+  padding: .95rem 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.apple-home .wallet-coin-row + .wallet-coin-row {
+  border-top: 1px solid var(--apple-rule);
+}
+
+.apple-home .wallet-coin-fallback {
+  background: color-mix(in srgb, var(--apple-scene) 12%, transparent);
+  color: var(--apple-scene);
+}
+
+/* Copy + team embeds: merge into the page, strip card chrome. */
+.apple-home .copy-page-preview,
+.apple-home .referral-embedded,
+.apple-home .referral-embedded .referral-reference-content,
+.apple-home .referral-embedded .referral-reference-card,
+.apple-home .referral-embedded .referral-invite-panel,
+.apple-home .referral-embedded .referral-info article,
+.apple-home .referral-embedded .referral-metrics,
+.apple-home .copy-tabs {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.apple-home .copy-page-preview {
+  margin: 0;
+  padding: 1.5rem 0 0;
+  border-top: 1px solid var(--apple-rule);
+}
+
+.apple-home .copy-page-preview .copy-page-body { padding: 0; }
+
+.apple-home .copy-preview-heading {
+  margin-bottom: .85rem;
+}
+
+.apple-home .copy-preview-heading h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.apple-home .copy-preview-heading a {
+  color: var(--apple-scene);
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.apple-home .copy-page-preview + .referral-embedded {
+  margin-top: 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--apple-rule);
+}
+
+.apple-home .referral-embedded {
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.apple-home .referral-reference-hero {
+  padding: .25rem 0 1rem;
+}
+
+.apple-home .referral-reference-hero > p:first-of-type {
+  color: var(--app-text-secondary);
+  letter-spacing: .08em;
+}
+
+.apple-home .referral-reference-hero h1 {
+  margin: .4rem 0 .55rem;
+  font-size: clamp(1.55rem, 5vw, 2.1rem);
+  letter-spacing: -.035em;
+}
+
+.apple-home .referral-reference-hero h1 em {
+  color: var(--apple-scene);
+}
+
+.apple-home .referral-commission {
+  padding: 0 0 1rem;
+}
+
+.apple-home .referral-commission strong {
+  color: var(--app-text-primary);
+}
+
+.apple-home .referral-invite-panel {
+  margin: 0;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--apple-rule);
+}
+
+.apple-home .referral-share-actions span {
+  background: color-mix(in srgb, var(--apple-scene) 10%, transparent);
+  color: var(--apple-scene);
+  border-radius: .85rem;
+}
+
+.apple-home .referral-info article {
+  margin-bottom: 0;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--apple-rule);
+}
+
+.apple-home .referral-info article i {
+  background: var(--apple-scene);
+}
+
+.apple-home .referral-metrics {
+  margin: 0 0 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--apple-rule);
+  border-bottom: 1px solid var(--apple-rule);
+}
+
+.apple-home .copy-tabs {
+  margin-bottom: .75rem;
+  padding: 0;
+  background: transparent;
+}
+
+.apple-home .copy-tabs button[aria-pressed="true"] {
+  background: transparent;
+  color: var(--apple-scene);
+  box-shadow: none;
+  border-bottom: 2px solid var(--apple-scene);
+  border-radius: 0;
+}
+
+.apple-home :is(a, button):focus-visible {
+  outline: 2px solid var(--apple-scene);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apple-home-actions a { transition: none; }
+}

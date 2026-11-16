@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ChevronLeft } from "lucide-react";
+import { useT } from "@/i18n/I18nProvider";
 
 export function AuthLayout({
   children,
@@ -12,20 +13,23 @@ export function AuthLayout({
   title?: string;
   subtitle?: string;
 }) {
+  const t = useT();
   return (
-    <div className="brand-auth mx-auto flex min-h-dvh max-w-md flex-col px-6 py-6 sm:py-8">
-      <div className="mb-6 h-6 shrink-0 sm:mb-8">
+    <div className="onboarding-auth">
+      <div className="onboarding-auth-nav">
         {onBack && (
-          <button onClick={onBack} aria-label="Back" className="text-app-primary">
-            <ChevronLeft className="h-6 w-6 rtl:rotate-180" />
+          <button type="button" onClick={onBack} aria-label={t("common.back")} className="onboarding-auth-back">
+            <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
           </button>
         )}
       </div>
-      <div className="brand-auth-content flex flex-1 flex-col justify-center">
-        {title && <h1 className="mb-2 text-headline text-app-primary">{title}</h1>}
-        {subtitle && <p className="mb-6 text-body text-app-secondary">{subtitle}</p>}
-        {children}
-      </div>
+      {(title || subtitle) && (
+        <div className="onboarding-auth-heading">
+          {title && <h1>{title}</h1>}
+          {subtitle && <p>{subtitle}</p>}
+        </div>
+      )}
+      <div className="onboarding-auth-body">{children}</div>
     </div>
   );
 }
