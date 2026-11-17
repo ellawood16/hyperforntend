@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BadgeCheck, Bell, Check, ChevronRight, Languages, LogOut, Palette, ShieldCheck, UserRound, Users } from "lucide-react";
-import { changePassword, updateLoginSecurity, updateProfile, type ProfileUpdate, type UserProfile } from "@/api/auth";
+import { ArrowLeft, BadgeCheck, Bell, Check, ChevronRight, Languages, LogOut, Palette, ShieldCheck, Trash2, UserRound, Users } from "lucide-react";
+import { changePassword, deleteAccount, updateLoginSecurity, updateProfile, type ProfileUpdate, type UserProfile } from "@/api/auth";
+import { ApiError } from "@/api/types";
 import { getKycStatus, type KycStatusResponse } from "@/api/kyc";
 import { Button } from "@/components/shared/Button";
 import { TextField } from "@/components/shared/TextField";
@@ -11,7 +12,7 @@ import { brandConfig } from "@/config/site";
 import { useAuth } from "@/state/AuthContext";
 import { useTheme } from "@/state/ThemeContext";
 
-type View = "home" | "personal" | "security" | "password" | "identity" | "preferences";
+type View = "home" | "personal" | "security" | "password" | "delete" | "identity" | "preferences";
 type Translate = ReturnType<typeof useT>;
 type HomeProps = {
   user: UserProfile;
@@ -212,7 +213,9 @@ function IdentityDetails({ user, kyc, loading, error, retry, t, language }: {
   </div>;
 }
 
-function SecurityDetails({ user, t, onPassword, onRefresh }: { user: UserProfile; t: Translate; onPassword: () => void; onRefresh: () => Promise<void> }) {
+function SecurityDetails({ user, t, onPassword, onDelete, onRefresh }: {
+  user: UserProfile; t: Translate; onPassword: () => void; onDelete: () => void; onRefresh: () => Promise<void>;
+}) {
   const security = useMutation({ mutationFn: updateLoginSecurity, onSuccess: onRefresh });
   const rows = [
     { key: "two_factor_enabled" as const, label: t("signal.twoFactor"), hint: t("profile.everyLoginHint") },
@@ -237,8 +240,68 @@ function SecurityDetails({ user, t, onPassword, onRefresh }: { user: UserProfile
     <button type="button" onClick={onPassword} className="flex min-h-14 w-full items-center justify-between rounded-card bg-app-surface-soft px-4 text-start text-body-lg text-app-primary">
       {t("profile.password")}<ChevronRight className="h-5 w-5 rtl:rotate-180" />
     </button>
+    <button type="button" onClick={onDelete} className="flex min-h-14 w-full items-center justify-between rounded-card bg-app-surface-soft px-4 text-start text-body-lg text-app-danger">
+      <span className="inline-flex items-center gap-2"><Trash2 className="h-5 w-5" aria-hidden="true" />{t("profile.deleteAccount")}</span>
+      <ChevronRight className="h-5 w-5 rtl:rotate-180" />
+    </button>
     <p className="text-label text-app-secondary">{t("profile.securityFootnote")}</p>
   </div>;
+}
+
+function DeleteAccountDetails({ t, onClosed }: { t: Translate; onClosed: () => Promise<void> }) {
+  const [password, setPassword] = useState("");
+  const [reason, setReason] = useState("");
+  const [passwordError, setPasswordError] = useState<string>();
+  const close = useMutation({
+    mutationFn: () => deleteAccount(password, reason.trim()),
+    onSuccess: () => { void onClosed(); },
+  });
+  const fieldPasswordError = (() => {
+    if (!(close.error instanceof ApiError) || !close.error.fieldErrors || typeof close.error.fieldErrors !== "object") return undefined;
+    const errors = (close.error.fieldErrors as Record<string, unknown>).password;
+    if (Array.isArray(errors) && typeof errors[0] === "string") return errors[0];
+    return undefined;
+  })();
+  const canSubmit = password.length > 0 && !close.isPending;
+  return <form
+    onSubmit={event => {
+      event.preventDefault();
+      if (!password.trim()) {
+        setPasswordError(t("profile.deleteAccountPasswordRequired"));
+        return;
+      }
+      setPasswordError(undefined);
+      close.mutate();
+    }}
+    className="space-y-6"
+  >
+    <p className="text-body text-app-secondary">{t("profile.deleteAccountIntro")}</p>
+    <p className="text-body text-app-danger">{t("profile.deleteAccountWarning")}</p>
+    <TextField
+      id="delete-account-password"
+      type="password"
+      autoComplete="current-password"
+      label={t("profile.deleteAccountPassword")}
+      value={password}
+      onChange={event => {
+        setPassword(event.target.value);
+        setPasswordError(undefined);
+      }}
+      error={passwordError || fieldPasswordError}
+    />
+    <TextField
+      id="delete-account-reason"
+      label={t("profile.deleteAccountReason")}
+      value={reason}
+      onChange={event => setReason(event.target.value)}
+      maxLength={255}
+      placeholder={t("profile.deleteAccountReasonPlaceholder")}
+    />
+    {close.isError && !fieldPasswordError && <p role="alert" className="text-body text-app-danger">{t("profile.deleteAccountError")}</p>}
+    <Button type="submit" variant="destructive" loading={close.isPending} disabled={!canSubmit} fullWidth>
+      {t("profile.deleteAccountConfirm")}
+    </Button>
+  </form>;
 }
 
 function PreferencesDetails({ t }: { t: Translate }) {
@@ -286,16 +349,24 @@ export function ProfilePage() {
   if (!user) return null;
   const open = (next: View) => { setFeedback(""); setView(next); };
   const onSaved = (updated: UserProfile) => { setUser(updated); setView("home"); setFeedback("profile.saved"); };
-  const title = t(view === "personal" ? "profile.personal" : view === "security" ? "profile.security" : view === "password" ? "profile.password" : view === "identity" ? "profile.identity" : "profile.preferences");
+  const title = t(
+    view === "personal" ? "profile.personal"
+      : view === "security" ? "profile.security"
+      : view === "password" ? "profile.password"
+      : view === "delete" ? "profile.deleteAccountTitle"
+      : view === "identity" ? "profile.identity"
+      : "profile.preferences",
+  );
   const props: HomeProps = { user, name: fullName(user), kyc: kyc.data, t, open, theme, language, onLogout: () => void signOut() };
   return <>
     <main className="px-4 pb-8 pt-6">
     {feedback && <p role="status" className="mb-4 text-body text-app-success">{t(feedback)}</p>}
     {view === "home" ? <ProfileOverview {...props} /> :
-      <DetailFrame title={title} back={() => setView("home")} t={t}>
+      <DetailFrame title={title} back={() => setView(view === "delete" || view === "password" ? "security" : "home")} t={t}>
         {view === "personal" && <PersonalDetails user={user} onSaved={onSaved} t={t} />}
         {view === "password" && <PasswordDetails t={t} onSignOut={() => void signOut()} />}
-        {view === "security" && <SecurityDetails user={user} t={t} onPassword={() => open("password")} onRefresh={refreshUser} />}
+        {view === "delete" && <DeleteAccountDetails t={t} onClosed={signOut} />}
+        {view === "security" && <SecurityDetails user={user} t={t} onPassword={() => open("password")} onDelete={() => open("delete")} onRefresh={refreshUser} />}
         {view === "identity" && <IdentityDetails user={user} kyc={kyc.data} loading={kyc.isPending} error={kyc.isError} retry={() => { void kyc.refetch(); }} t={t} language={language} />}
         {view === "preferences" && <PreferencesDetails t={t} />}
       </DetailFrame>}

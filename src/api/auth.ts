@@ -165,3 +165,10 @@ export function changePassword(currentPassword: string, newPassword: string, con
     confirm_password: confirmPassword,
   });
 }
+
+export function deleteAccount(password: string, reason = "") {
+  return http.post<{ message: string }>("/api/auth/user/delete/", {
+    password,
+    reason,
+  }, { skipAuthRetry: true });
+}
