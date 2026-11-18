@@ -7,8 +7,8 @@
     "pwa512": "/icons/hyperapp-512.png"
   },
   "supportEmail": "support@example.com",
-  "telegramSupportUrl": "",
-  "telegramChannelUrl": "",
+  "telegramSupportUrl": "https://t.me/emily_livacoin",
+  "telegramChannelUrl": "https://t.me/livacoin",
   "style": "apple",
   "accent": "#f56536",
   "colors": {
