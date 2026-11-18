@@ -36,11 +36,11 @@ export function InviteLandingPage() {
       </> : invite.isPending && validShape ? <p className="text-app-secondary">{t("common.loading")}</p> :
         invite.data?.valid ? <>
           <p className="text-body text-app-secondary">{t("referral.invitedBody")}</p>
-          <Link to="/auth" onClick={() => rememberInvite(code)}><Button fullWidth>{t("referral.createAccount")}</Button></Link>
+          <Link to="/" onClick={() => rememberInvite(code)}><Button fullWidth>{t("referral.createAccount")}</Button></Link>
           <p className="text-label text-app-secondary">{t("referral.inviteRemembered")}</p>
         </> : invalid ? <>
           <p className="text-body text-app-secondary">{t("referral.invalidInvite")}</p>
-          <Link to="/auth" onClick={clearInvite}><Button fullWidth>{t("referral.continueWithoutInvite")}</Button></Link>
+          <Link to="/" onClick={clearInvite}><Button fullWidth>{t("referral.continueWithoutInvite")}</Button></Link>
         </> : <>
           <p role="alert" className="text-body text-app-secondary">{t("referral.checkError")}</p>
           <Button fullWidth onClick={() => invite.refetch()}>{t("common.retry")}</Button>

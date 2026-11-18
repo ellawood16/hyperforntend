@@ -3,9 +3,8 @@ import { QueryProvider } from "@/state/QueryProvider";
 import { ThemeProvider } from "@/state/ThemeContext";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { AuthProvider } from "@/state/AuthContext";
-import { ProtectedRoute, GuestRoute } from "@/routes/ProtectedRoute";
+import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { AppShell } from "@/routes/AppShell";
-import { AuthPage } from "@/features/auth/AuthPage";
 import { WalletHomePage } from "@/features/wallet/WalletHomePage";
 import { MarketPage } from "@/features/wallet/MarketPage";
 import { AssetDetailPage } from "@/features/wallet/AssetDetailPage";
@@ -35,9 +34,6 @@ export function App() {
               <BrowserRouter>
                 <Routes>
                   <Route path="/r/:code" element={<InviteLandingPage />} />
-                  <Route element={<GuestRoute />}>
-                    <Route path="/auth" element={<AuthPage />} />
-                  </Route>
 
                   <Route element={<ProtectedRoute />}>
                     <Route element={<AppShell />}>
