@@ -1,10 +1,11 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { QueryProvider } from "@/state/QueryProvider";
 import { ThemeProvider } from "@/state/ThemeContext";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { AuthProvider } from "@/state/AuthContext";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { AppShell } from "@/routes/AppShell";
+import { NotFoundPage } from "@/routes/NotFoundPage";
 import { WalletHomePage } from "@/features/wallet/WalletHomePage";
 import { MarketPage } from "@/features/wallet/MarketPage";
 import { AssetDetailPage } from "@/features/wallet/AssetDetailPage";
@@ -56,7 +57,7 @@ export function App() {
                     </Route>
                   </Route>
 
-                  <Route path="*" element={<Navigate to="/" replace />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </BrowserRouter>
             </AuthProvider>

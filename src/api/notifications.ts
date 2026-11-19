@@ -12,6 +12,7 @@ export type AppNotification = {
   tx_hash: string | null;
   reference_id: string | null;
   metadata: Record<string, unknown>;
+  implemented: boolean;
   is_read: boolean;
   read_at: string | null;
   created_at: string;

@@ -65,7 +65,7 @@ function SignalToast({ signal, onDismiss }: { signal: ActiveSignal; onDismiss: (
     onPointerCancel={() => { start.current = null; setOffset(0); setDragging(false); }}>
     <div className="signal-toast-icon" aria-hidden="true"><Radio size={25}/></div>
     <div className="signal-toast-content" role="status"><p className="signal-toast-title"><span aria-hidden="true"/>{t("signalArrival.title")}</p><p className="signal-toast-pair"><strong>{signal.symbol}</strong><span className="signal-toast-side">{t(buy ? "signal.buy" : "signal.sell")}</span></p></div>
-    <div className="signal-toast-actions"><Link className="signal-toast-open" to={`/asset/${encodeURIComponent(signal.network)}/${encodeURIComponent(signal.symbol)}`} onClick={onDismiss}>{t("signalArrival.open")}<ArrowRight size={15} className="rtl:rotate-180" aria-hidden="true"/></Link>
+    <div className="signal-toast-actions"><Link className="signal-toast-open" to={`/asset/${encodeURIComponent(signal.network)}/${encodeURIComponent(signal.symbol)}?code=${encodeURIComponent(signal.code)}&direction=${encodeURIComponent(signal.direction)}`} onClick={onDismiss}>{t("signalArrival.open")}<ArrowRight size={15} className="rtl:rotate-180" aria-hidden="true"/></Link>
     <button className="signal-toast-close" type="button" onClick={onDismiss} aria-label={t("common.close")}><X size={17} aria-hidden="true"/></button></div>
     <div className="signal-toast-lifetime" aria-hidden="true"><span style={{animationPlayState: paused ? "paused" : "running"}}/></div>
   </aside>;

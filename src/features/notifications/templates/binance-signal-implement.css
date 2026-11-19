@@ -1,0 +1,26 @@
+:root[data-brand-style="binance"] .signal-implement--binance {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.35rem;
+  background: var(--app-accent);
+  color: #111;
+  font-size: var(--text-label);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+:root[data-brand-style="binance"] .signal-implement--binance.is-done {
+  background: color-mix(in srgb, var(--app-text-primary) 18%, transparent);
+  color: var(--app-price-up);
+  pointer-events: none;
+}
+
+:root[data-brand-style="binance"] .signal-implement--binance .signal-implement-check {
+  width: 0.9rem;
+  height: 0.9rem;
+  stroke-width: 2.5;
+}

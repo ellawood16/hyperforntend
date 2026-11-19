@@ -1,0 +1,29 @@
+:root[data-brand-style="anon"] .signal-implement--anon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 35%, transparent);
+  background: var(--app-accent);
+  color: #fff;
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+:root[data-brand-style="anon"] .signal-implement--anon.is-done {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--app-text-primary) 12%, transparent);
+  color: var(--app-price-up);
+  pointer-events: none;
+}
+
+:root[data-brand-style="anon"] .signal-implement--anon .signal-implement-check {
+  width: 0.95rem;
+  height: 0.95rem;
+  stroke-width: 2.6;
+}

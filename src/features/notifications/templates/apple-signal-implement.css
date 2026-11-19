@@ -1,0 +1,26 @@
+:root[data-brand-style="apple"] .signal-implement--apple {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.95rem;
+  background: #3478f6;
+  color: #fff;
+  font-size: var(--text-label);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+:root[data-brand-style="apple"] .signal-implement--apple.is-done {
+  background: #e8e8ed;
+  color: #249b68;
+  pointer-events: none;
+}
+
+:root[data-brand-style="apple"] .signal-implement--apple .signal-implement-check {
+  width: 0.9rem;
+  height: 0.9rem;
+  stroke-width: 2.4;
+}

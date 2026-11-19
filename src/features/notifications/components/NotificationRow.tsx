@@ -5,6 +5,12 @@ import { markNotificationRead, type AppNotification } from "@/api/notifications"
 import { useT } from "@/i18n/I18nProvider";
 import { formatDateTime, formatDecimal2 } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { SignalImplementAction } from "../templates/SignalImplementAction";
+
+function signalHref(network: string, symbol: string, code: string, direction: "buy" | "sell") {
+  const params = new URLSearchParams({ code, direction });
+  return `/asset/${encodeURIComponent(network)}/${encodeURIComponent(symbol)}?${params.toString()}`;
+}
 
 export function NotificationRow({ notification, language }: { notification: AppNotification; language: "en" | "ar" }) {
   const t = useT();
@@ -24,13 +30,13 @@ export function NotificationRow({ notification, language }: { notification: AppN
   const code = notification.type === "signal" && typeof metadata.code === "string" && /^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}$/i.test(metadata.code) ? metadata.code.toUpperCase() : null;
   const direction = metadata.direction === "buy" || metadata.direction === "sell" ? metadata.direction : null;
   const symbol = typeof metadata.symbol === "string" ? metadata.symbol : null;
-  const decimal = (value: unknown) => typeof value === "string" && /^\d+(\.\d+)?$/.test(value) ? formatDecimal2(value) : null;
-  const profitType = metadata.profit_type === "fixed_usdt" || metadata.profit_type === "deposit_daily" ? metadata.profit_type : "percent";
-  const profit = profitType === "deposit_daily" ? null : decimal(profitType === "fixed_usdt" ? metadata.profit_amount : metadata.profit_percent);
-  const minimum = decimal(metadata.minimum_balance);
+  const network = typeof metadata.network === "string" ? metadata.network : null;
+  const minimum = typeof metadata.minimum_balance === "string" && /^\d+(\.\d+)?$/.test(metadata.minimum_balance)
+    ? formatDecimal2(metadata.minimum_balance)
+    : null;
   const expiry = typeof metadata.expires_at === "string" && Number.isFinite(Date.parse(metadata.expires_at)) ? metadata.expires_at : null;
-  const signal = code && direction && symbol && (profitType === "deposit_daily" || profit) && minimum && expiry
-    ? { code, direction, symbol, profitType, profit, minimum, expiry }
+  const signal = code && direction && symbol && network
+    ? { code, direction, symbol, network, minimum, expiry }
     : null;
   const deposit = notification.type === "deposit" && notification.amount != null && notification.token
     ? { amount: formatDecimal2(notification.amount), token: notification.token } : null;
@@ -50,13 +56,19 @@ export function NotificationRow({ notification, language }: { notification: AppN
       }}>{copyState === "copied" ? <Check aria-hidden="true" className="h-4 w-4" /> : <Copy aria-hidden="true" className="h-4 w-4" />}</button>
     </div>}
     {signal ? <div className="space-y-1 text-label text-app-secondary">
-      <p>{signal.profitType === "fixed_usdt"
-        ? t("notif.signalTermsFixed", { amount: signal.profit ?? "0", minimum: signal.minimum })
-        : signal.profitType === "deposit_daily"
-          ? t("notif.signalTermsDepositDaily", { minimum: signal.minimum })
-          : t("notif.signalTerms", { percent: signal.profit ?? "0", minimum: signal.minimum })}</p>
-      <p>{t("signal.expires")}: <time dateTime={signal.expiry}>{formatDateTime(signal.expiry, language)}</time></p>
-    </div> : <p className="text-body text-app-secondary">{deposit ? t("notif.depositBody", { amount: deposit.amount, token: deposit.token }) : notification.message}</p>}
+      {signal.minimum && <p>{t("signal.minimum")}: {signal.minimum} USDT</p>}
+      {signal.expiry && <p>{t("signal.expires")}: <time dateTime={signal.expiry}>{formatDateTime(signal.expiry, language)}</time></p>}
+    </div> : deposit ? <p className="text-body text-app-secondary">{t("notif.depositBody", { amount: deposit.amount, token: deposit.token })}</p>
+      : notification.type !== "signal" ? <p className="text-body text-app-secondary">{notification.message}</p> : null}
+    {signal && (
+      <div className="mt-3">
+        <SignalImplementAction
+          implemented={notification.implemented}
+          to={signalHref(signal.network, signal.symbol, signal.code, signal.direction)}
+          onActivate={read}
+        />
+      </div>
+    )}
     <span role="status" className={copyState === "error" ? "mt-2 block text-label text-app-secondary" : "sr-only"}>
       {copyState === "copied" ? t("common.copied") : copyState === "error" ? t("notif.copyError") : ""}
     </span>

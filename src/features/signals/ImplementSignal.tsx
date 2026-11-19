@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClipboardPaste, Check, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { brandConfig } from "@/config/site";
 import { useT, useI18n } from "@/i18n/I18nProvider";
 import { Button } from "@/components/shared/Button";
@@ -10,11 +11,19 @@ import { formatDecimal2 } from "@/lib/format";
 import { inputAmount, normalizeAmount, units } from "@/lib/amounts";
 import { cn } from "@/lib/cn";
 
+const CODE_PATTERN = /^[A-Z2-9]{3}-[A-Z2-9]{3}-[A-Z2-9]{3}$/;
+
+function formatCode(value: string) {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 9).match(/.{1,3}/g)?.join("-") ?? "";
+}
+
 export function ImplementSignal({ network, symbol }: { network: string; symbol: string }) {
   const t = useT();
   const { language } = useI18n();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dialog = useRef<HTMLDialogElement>(null);
+  const prefillsApplied = useRef(false);
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
   const [entry, setEntry] = useState("");
@@ -25,12 +34,33 @@ export function ImplementSignal({ network, symbol }: { network: string; symbol: 
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
   const apple = brandConfig.style === "apple";
-  const validCode = /^[A-Z2-9]{3}-[A-Z2-9]{3}-[A-Z2-9]{3}$/.test(code);
+  const validCode = CODE_PATTERN.test(code);
   const validEntry = inputAmount(entry);
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
 
+  useEffect(() => {
+    if (prefillsApplied.current) return;
+    const rawCode = searchParams.get("code");
+    const rawDirection = searchParams.get("direction");
+    const nextCode = rawCode ? formatCode(rawCode) : "";
+    const nextDirection = rawDirection === "buy" || rawDirection === "sell" ? rawDirection : undefined;
+    if (!CODE_PATTERN.test(nextCode) && !nextDirection) return;
+    prefillsApplied.current = true;
+    if (CODE_PATTERN.test(nextCode)) setCode(nextCode);
+    if (nextDirection) setDirection(nextDirection);
+    setPreview(undefined);
+    setResult(undefined);
+    setError(undefined);
+    setEntry("");
+    setOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("code");
+    next.delete("direction");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   const changeCode = (value: string) => {
-    setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 9).match(/.{1,3}/g)?.join("-") ?? "");
+    setCode(formatCode(value));
     setPreview(undefined);
     setError(undefined);
   };
@@ -52,6 +82,7 @@ export function ImplementSignal({ network, symbol }: { network: string; symbol: 
         await queryClient.invalidateQueries({ queryKey: ["transactions"] });
         await queryClient.invalidateQueries({ queryKey: ["active-signals"] });
         await queryClient.invalidateQueries({ queryKey: ["signal-orders"] });
+        await queryClient.invalidateQueries({ queryKey: ["notifications"] });
       } else if (!preview) {
         setPreview(await previewSignal(data));
       } else if (direction) {
@@ -61,6 +92,7 @@ export function ImplementSignal({ network, symbol }: { network: string; symbol: 
         await queryClient.invalidateQueries({ queryKey: ["transactions"] });
         await queryClient.invalidateQueries({ queryKey: ["active-signals"] });
         await queryClient.invalidateQueries({ queryKey: ["signal-orders"] });
+        await queryClient.invalidateQueries({ queryKey: ["notifications"] });
       }
     } catch (err) {
       const key = err instanceof ApiError ? `signalErrors.${err.code}` : "";
