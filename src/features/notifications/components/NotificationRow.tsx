@@ -28,7 +28,10 @@ export function NotificationRow({ notification, language }: { notification: AppN
   const read = () => { if (!notification.is_read && !markRead.isPending) markRead.mutate(); };
   const metadata = notification.metadata ?? {};
   const code = notification.type === "signal" && typeof metadata.code === "string" && /^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}$/i.test(metadata.code) ? metadata.code.toUpperCase() : null;
-  const direction = metadata.direction === "buy" || metadata.direction === "sell" ? metadata.direction : null;
+  const direction =
+    metadata.direction === "buy" || metadata.direction === "sell"
+      ? (metadata.direction as "buy" | "sell")
+      : null;
   const symbol = typeof metadata.symbol === "string" ? metadata.symbol : null;
   const network = typeof metadata.network === "string" ? metadata.network : null;
   const minimum = typeof metadata.minimum_balance === "string" && /^\d+(\.\d+)?$/.test(metadata.minimum_balance)
