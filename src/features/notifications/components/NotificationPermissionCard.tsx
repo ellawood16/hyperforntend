@@ -3,9 +3,15 @@ import { registerWebPushSubscription } from "@/api/notifications";
 import { Button } from "@/components/shared/Button";
 import { useT } from "@/i18n/I18nProvider";
 import { getDeviceId } from "@/lib/device";
-import { readyWebPushWorker, requestWebPushSubscription, webPushErrorKey } from "@/lib/webPush";
+import {
+  isInAppBrowser,
+  isIosPushContextMissing,
+  readyWebPushWorker,
+  requestWebPushSubscription,
+  webPushErrorKey,
+} from "@/lib/webPush";
 
-type PushStatus = "checking" | "unsupported" | "needed" | "blocked" | "enabled";
+type PushStatus = "checking" | "unsupported" | "needed" | "blocked" | "enabled" | "in_app" | "ios_home";
 
 function supportsPush(): boolean {
   return Boolean(import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY)
@@ -14,6 +20,23 @@ function supportsPush(): boolean {
 
 function isPermissionDenied(): boolean {
   return Notification.permission === "denied";
+}
+
+function statusMessageKey(status: PushStatus): string {
+  switch (status) {
+    case "blocked":
+      return "referral.pushDenied";
+    case "in_app":
+      return "referral.pushInAppBrowser";
+    case "ios_home":
+      return "referral.pushIosHomeScreen";
+    case "unsupported":
+      return "referral.pushUnsupported";
+    case "enabled":
+      return "referral.notificationsEnabled";
+    default:
+      return "referral.pushPromptBody";
+  }
 }
 
 export function NotificationPermissionCard() {
@@ -25,6 +48,8 @@ export function NotificationPermissionCard() {
 
   const refreshStatus = useCallback(async () => {
     if (!supportsPush()) { setStatus("unsupported"); return; }
+    if (isInAppBrowser()) { setStatus("in_app"); return; }
+    if (isIosPushContextMissing()) { setStatus("ios_home"); return; }
     if (isPermissionDenied()) { setStatus("blocked"); return; }
     if (Notification.permission !== "granted") { setStatus("needed"); return; }
     try {
@@ -48,6 +73,8 @@ export function NotificationPermissionCard() {
   }, [refreshStatus]);
 
   const enable = async () => {
+    if (isInAppBrowser()) { setStatus("in_app"); return; }
+    if (isIosPushContextMissing()) { setStatus("ios_home"); return; }
     if (isPermissionDenied()) {
       setStatus("blocked");
       setShowGuide(true);
@@ -62,9 +89,14 @@ export function NotificationPermissionCard() {
       setShowGuide(false);
     } catch (error) {
       console.error("web push enable failed", error);
-      setErrorKey(webPushErrorKey(error));
-      await refreshStatus();
-      if (isPermissionDenied()) setShowGuide(true);
+      const key = webPushErrorKey(error);
+      setErrorKey(key);
+      if (key === "referral.pushInAppBrowser") setStatus("in_app");
+      else if (key === "referral.pushIosHomeScreen") setStatus("ios_home");
+      else {
+        await refreshStatus();
+        if (isPermissionDenied()) setShowGuide(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -72,11 +104,7 @@ export function NotificationPermissionCard() {
 
   return <section className="rounded-card bg-app-surface p-4 sm:p-5" aria-label={t("referral.notificationTitle")}>
     <h2 className="mb-2 text-title-md text-app-primary">{t("referral.notificationTitle")}</h2>
-    <p className="mb-4 text-body text-app-secondary">
-      {t(status === "blocked" ? "referral.pushDenied"
-        : status === "unsupported" ? "referral.pushUnsupported"
-          : status === "enabled" ? "referral.notificationsEnabled" : "referral.pushPromptBody")}
-    </p>
+    <p className="mb-4 text-body text-app-secondary">{t(statusMessageKey(status))}</p>
     {(status === "needed" || status === "blocked") && <Button fullWidth loading={loading} onClick={enable}>
       {t("referral.enableNotifications")}
     </Button>}
@@ -86,6 +114,6 @@ export function NotificationPermissionCard() {
       <p className="mt-2">{t("referral.pushSettingsAndroid")}</p>
       <Button variant="secondary" className="mt-3" onClick={() => void refreshStatus()}>{t("referral.pushCheckAgain")}</Button>
     </div>}
-    {errorKey && status !== "blocked" && <p role="alert" className="mt-3 text-label text-app-danger">{t(errorKey)}</p>}
+    {errorKey && status === "needed" && <p role="alert" className="mt-3 text-label text-app-danger">{t(errorKey)}</p>}
   </section>;
 }

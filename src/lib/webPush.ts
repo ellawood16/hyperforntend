@@ -26,6 +26,26 @@ function applicationServerKeySource(bytes: Uint8Array): ArrayBuffer {
   return Uint8Array.from(bytes).buffer;
 }
 
+/** Telegram / Instagram / Facebook / etc. in-app browsers often cannot grant push. */
+export function isInAppBrowser(): boolean {
+  const ua = navigator.userAgent || "";
+  return /FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok|BytedanceWebview|Snapchat|Twitter|LinkedInApp|Discord|Telegram|WV\)/i.test(ua)
+    || (/Android/i.test(ua) && /\bwv\b/i.test(ua));
+}
+
+export function isIosDevice(): boolean {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+/** iOS Safari only allows web push from a Home Screen / standalone PWA. */
+export function isIosPushContextMissing(): boolean {
+  if (!isIosDevice()) return false;
+  const standalone = window.matchMedia("(display-mode: standalone)").matches
+    || ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
+  return !standalone;
+}
+
 export async function readyWebPushWorker(): Promise<ServiceWorkerRegistration> {
   const registration = await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
   try {
@@ -66,6 +86,10 @@ export async function requestWebPushSubscription(): Promise<PushSubscriptionJSON
   if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
     throw new Error("web_push_unsupported");
   }
+  if (isInAppBrowser()) throw new Error("web_push_in_app_browser");
+  if (isIosPushContextMissing()) throw new Error("web_push_ios_home_screen");
+
+  if (Notification.permission === "denied") throw new Error("web_push_permission_denied");
 
   const permission = Notification.permission === "granted"
     ? "granted"
@@ -78,7 +102,12 @@ export async function requestWebPushSubscription(): Promise<PushSubscriptionJSON
     subscription = await subscribeWithPublicKey(registration, publicKey);
   } catch (error) {
     const name = error instanceof DOMException || error instanceof Error ? error.name : "";
-    if (name === "AbortError" || name === "NotAllowedError") throw new Error("web_push_permission_denied");
+    // NotAllowedError after a granted prompt usually means OS/browser policy, not site settings.
+    if (name === "NotAllowedError") {
+      if (isIosPushContextMissing()) throw new Error("web_push_ios_home_screen");
+      if (isInAppBrowser()) throw new Error("web_push_in_app_browser");
+      throw new Error("web_push_permission_denied");
+    }
     if (name === "DataError" || name === "InvalidAccessError") throw new Error("web_push_invalid_key");
     throw new Error("web_push_subscribe_failed");
   }
@@ -105,6 +134,10 @@ export function webPushErrorKey(error: unknown): string {
       return "referral.pushUnsupported";
     case "web_push_permission_denied":
       return "referral.pushDenied";
+    case "web_push_in_app_browser":
+      return "referral.pushInAppBrowser";
+    case "web_push_ios_home_screen":
+      return "referral.pushIosHomeScreen";
     case "web_push_worker_timeout":
       return "referral.pushWorkerFailed";
     case "web_push_invalid_key":
