@@ -3,7 +3,7 @@ import { registerWebPushSubscription } from "@/api/notifications";
 import { Button } from "@/components/shared/Button";
 import { useT } from "@/i18n/I18nProvider";
 import { getDeviceId } from "@/lib/device";
-import { readyWebPushWorker, requestWebPushSubscription } from "@/lib/webPush";
+import { readyWebPushWorker, requestWebPushSubscription, webPushErrorKey } from "@/lib/webPush";
 
 type PushStatus = "checking" | "unsupported" | "needed" | "blocked" | "enabled";
 
@@ -20,7 +20,7 @@ export function NotificationPermissionCard() {
   const t = useT();
   const [status, setStatus] = useState<PushStatus>("checking");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(false);
 
   const refreshStatus = useCallback(async () => {
@@ -54,14 +54,15 @@ export function NotificationPermissionCard() {
       return;
     }
     setLoading(true);
-    setError(false);
+    setErrorKey(null);
     try {
       const subscription = await requestWebPushSubscription();
       await registerWebPushSubscription(getDeviceId(), subscription);
       setStatus("enabled");
       setShowGuide(false);
-    } catch {
-      setError(true);
+    } catch (error) {
+      console.error("web push enable failed", error);
+      setErrorKey(webPushErrorKey(error));
       await refreshStatus();
       if (isPermissionDenied()) setShowGuide(true);
     } finally {
@@ -85,6 +86,6 @@ export function NotificationPermissionCard() {
       <p className="mt-2">{t("referral.pushSettingsAndroid")}</p>
       <Button variant="secondary" className="mt-3" onClick={() => void refreshStatus()}>{t("referral.pushCheckAgain")}</Button>
     </div>}
-    {error && status !== "blocked" && <p role="alert" className="mt-3 text-label text-app-danger">{t("referral.pushFailed")}</p>}
+    {errorKey && status !== "blocked" && <p role="alert" className="mt-3 text-label text-app-danger">{t(errorKey)}</p>}
   </section>;
 }

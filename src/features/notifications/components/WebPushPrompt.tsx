@@ -4,7 +4,7 @@ import { registerWebPushSubscription } from "@/api/notifications";
 import { Button } from "@/components/shared/Button";
 import { useT } from "@/i18n/I18nProvider";
 import { getDeviceId } from "@/lib/device";
-import { readyWebPushWorker, requestWebPushSubscription } from "@/lib/webPush";
+import { readyWebPushWorker, requestWebPushSubscription, webPushErrorKey } from "@/lib/webPush";
 import { useAuth } from "@/state/AuthContext";
 
 type PromptState = "checking" | "needed" | "blocked" | "enabled";
@@ -19,7 +19,7 @@ export function WebPushPrompt() {
   const [state, setState] = useState<PromptState>("checking");
   const [dismissed, setDismissed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY || !("Notification" in window)
@@ -61,13 +61,14 @@ export function WebPushPrompt() {
 
   const enable = async () => {
     setLoading(true);
-    setError(false);
+    setErrorKey(null);
     try {
       const subscription = await requestWebPushSubscription();
       await registerWebPushSubscription(getDeviceId(), subscription);
       setState("enabled");
-    } catch {
-      setError(true);
+    } catch (error) {
+      console.error("web push enable failed", error);
+      setErrorKey(webPushErrorKey(error));
       if (Notification.permission === "denied") setState("blocked");
     } finally {
       setLoading(false);
@@ -85,7 +86,7 @@ export function WebPushPrompt() {
         className="w-full max-w-md rounded-sheet bg-app-surface p-6 shadow-xl">
         <h2 className="mb-2 text-title-md text-app-primary">{t("referral.notificationTitle")}</h2>
         <p className="mb-5 text-body text-app-secondary">{t(state === "blocked" ? "referral.pushDenied" : "referral.pushPromptBody")}</p>
-        {error && state !== "blocked" && <p role="alert" className="mb-3 text-label text-app-danger">{t("referral.pushFailed")}</p>}
+        {errorKey && state !== "blocked" && <p role="alert" className="mb-3 text-label text-app-danger">{t(errorKey)}</p>}
         {state === "needed" && <Button fullWidth loading={loading} onClick={enable}>{t("referral.enableNotifications")}</Button>}
         {state === "blocked" && <Link to="/notifications" onClick={dismiss}
           className="inline-flex w-full items-center justify-center rounded-chip bg-app-action px-6 py-3 text-body font-semibold text-app-on-action">
