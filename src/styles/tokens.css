@@ -99,7 +99,7 @@
 :root[data-brand-style="apple"] {
   --onboarding-primary: var(--color-verified-blue);
   --onboarding-secondary: var(--color-price-up-green);
-  --onboarding-warm: var(--color-warning-orange);
+  --onboarding-warm: #5e5ce6;
   --app-nav-active: var(--onboarding-primary);
 }
 
