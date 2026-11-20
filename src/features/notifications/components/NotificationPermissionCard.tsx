@@ -93,7 +93,10 @@ export function NotificationPermissionCard() {
       setErrorKey(key);
       if (key === "referral.pushInAppBrowser") setStatus("in_app");
       else if (key === "referral.pushIosHomeScreen") setStatus("ios_home");
-      else {
+      else if (key === "referral.pushBraveDisabled") {
+        // Keep status as needed so the Brave-specific alert stays visible.
+        setStatus("needed");
+      } else {
         await refreshStatus();
         if (isPermissionDenied()) setShowGuide(true);
       }

@@ -33,6 +33,11 @@ export function isInAppBrowser(): boolean {
     || (/Android/i.test(ua) && /\bwv\b/i.test(ua));
 }
 
+export function isBraveBrowser(): boolean {
+  const nav = navigator as Navigator & { brave?: { isBrave?: () => Promise<boolean> } };
+  return Boolean(nav.brave) || /Brave/i.test(navigator.userAgent || "");
+}
+
 export function isIosDevice(): boolean {
   return /iPad|iPhone|iPod/.test(navigator.userAgent)
     || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -44,6 +49,20 @@ export function isIosPushContextMissing(): boolean {
   const standalone = window.matchMedia("(display-mode: standalone)").matches
     || ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
   return !standalone;
+}
+
+function subscribeFailureCode(error: unknown): string {
+  const name = error instanceof DOMException || error instanceof Error ? error.name : "";
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  // Brave ships with Google FCM push disabled; site Notification permission can still be Allow.
+  if (isBraveBrowser() || /push service error/i.test(message)) return "web_push_brave_push_service";
+  if (name === "NotAllowedError") {
+    if (isIosPushContextMissing()) return "web_push_ios_home_screen";
+    if (isInAppBrowser()) return "web_push_in_app_browser";
+    return "web_push_permission_denied";
+  }
+  if (name === "DataError" || name === "InvalidAccessError") return "web_push_invalid_key";
+  return "web_push_subscribe_failed";
 }
 
 export async function readyWebPushWorker(): Promise<ServiceWorkerRegistration> {
@@ -101,15 +120,8 @@ export async function requestWebPushSubscription(): Promise<PushSubscriptionJSON
   try {
     subscription = await subscribeWithPublicKey(registration, publicKey);
   } catch (error) {
-    const name = error instanceof DOMException || error instanceof Error ? error.name : "";
-    // NotAllowedError after a granted prompt usually means OS/browser policy, not site settings.
-    if (name === "NotAllowedError") {
-      if (isIosPushContextMissing()) throw new Error("web_push_ios_home_screen");
-      if (isInAppBrowser()) throw new Error("web_push_in_app_browser");
-      throw new Error("web_push_permission_denied");
-    }
-    if (name === "DataError" || name === "InvalidAccessError") throw new Error("web_push_invalid_key");
-    throw new Error("web_push_subscribe_failed");
+    console.error("web push subscribe failed", error);
+    throw new Error(subscribeFailureCode(error));
   }
 
   const json = subscription.toJSON();
@@ -138,6 +150,8 @@ export function webPushErrorKey(error: unknown): string {
       return "referral.pushInAppBrowser";
     case "web_push_ios_home_screen":
       return "referral.pushIosHomeScreen";
+    case "web_push_brave_push_service":
+      return "referral.pushBraveDisabled";
     case "web_push_worker_timeout":
       return "referral.pushWorkerFailed";
     case "web_push_invalid_key":
